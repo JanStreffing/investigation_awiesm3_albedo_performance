@@ -1,0 +1,141 @@
+##### rank 0
+# total 236182 dropped 1685 t0 1790604815.351 binsec 10
+total samples: 186428 in window 200 s
+
+== by library
+  22.3 %     41585  libfesom.so
+  17.7 %     33003  libopen-pal.so.40.30.2
+  14.1 %     26317  libucp.so.0.0.0
+  12.8 %     23807  libuct.so.0.0.0
+  10.0 %     18636  libuct_ib.so.0.0.0
+   8.7 %     16273  libmpi.so.40.30.2
+   6.3 %     11825  libpthread-2.28.so
+   3.5 %      6528  libiomp5.so
+   2.7 %      4948  fesom
+   1.6 %      3054  libc-2.28.so
+   0.1 %       236  libmpi_mpifh.so.40.30.0
+   0.0 %        83  libstdc++.so.6.0.25
+   0.0 %        67  [vdso]
+   0.0 %        29  libucs.so.0.0.0
+   0.0 %        17  ld-2.28.so
+
+== top 25 routines
+  11.5 %     21365  libucp.so.0.0.0          ucp_worker_progress
+  11.2 %     20916  libuct.so.0.0.0          uct_mm_iface_progress
+   9.7 %     18049  libuct_ib.so.0.0.0       uct_dc_mlx5_iface_progress_ll
+   9.2 %     17190  libopen-pal.so.40.30.2   opal_progress
+   7.2 %     13344  libfesom.so              io_meandata_mp_update_means_
+   6.6 %     12387  libopen-pal.so.40.30.2   opal_timer_linux_get_cycles_sys_timer
+   4.7 %      8841  libmpi.so.40.30.2        ompi_coll_libnbc_progress
+   4.5 %      8378  libpthread-2.28.so       pthread_spin_lock
+   3.1 %      5714  libfesom.so              evpdynamics_m_
+   1.8 %      3349  libfesom.so              g_cvmix_idemix_mp_calc_cvmix_idemix_
+   1.3 %      2471  libuct.so.0.0.0          uct_mm_ep_am_bcopy
+   1.1 %      1974  libmpi.so.40.30.2        mca_pml_ucx_progress
+   1.0 %      1776  libmpi.so.40.30.2        pml_ucx_generic_datatype_finish
+   0.9 %      1766  libucp.so.0.0.0          ucp_eager_only_handler
+   0.9 %      1763  libc-2.28.so             __memmove_avx_unaligned_erms
+   0.9 %      1721  fesom                    __svml_pow1_ha_l9
+   0.8 %      1435  libpthread-2.28.so       pthread_self@GLIBC_2.2.5
+   0.7 %      1307  libopen-pal.so.40.30.2   ompi_sync_wait_mt
+   0.7 %      1222  libiomp5.so              __kmp_acquire_queuing_lock
+   0.7 %      1220  libucp.so.0.0.0          _init
+   0.6 %      1160  libfesom.so              oce_tra_adv_fct_
+   0.6 %      1137  libc-2.28.so             __memset_avx2_unaligned_erms
+   0.5 %      1002  libopen-pal.so.40.30.2   _init
+   0.5 %       943  libpthread-2.28.so       write
+   0.5 %       932  libfesom.so              diff_part_hor_redi_
+##### rank 896
+# total 231626 dropped 1140 t0 1790604815.495 binsec 10
+total samples: 186861 in window 200 s
+
+== by library
+  20.8 %     38912  libopen-pal.so.40.30.2
+  19.4 %     36288  libfesom.so
+  15.0 %     27953  libucp.so.0.0.0
+  13.8 %     25803  libuct.so.0.0.0
+  10.4 %     19446  libuct_ib.so.0.0.0
+   8.7 %     16248  libmpi.so.40.30.2
+   6.6 %     12377  libpthread-2.28.so
+   2.3 %      4313  fesom
+   1.4 %      2699  libc-2.28.so
+   1.3 %      2477  libiomp5.so
+   0.1 %       181  libmpi_mpifh.so.40.30.0
+   0.0 %        70  libstdc++.so.6.0.25
+   0.0 %        62  [vdso]
+   0.0 %        15  ld-2.28.so
+   0.0 %        14  libucs.so.0.0.0
+
+== top 25 routines
+  13.0 %     24303  libucp.so.0.0.0          ucp_worker_progress
+  12.9 %     24113  libuct.so.0.0.0          uct_mm_iface_progress
+  11.1 %     20748  libopen-pal.so.40.30.2   opal_progress
+  10.4 %     19381  libuct_ib.so.0.0.0       uct_dc_mlx5_iface_progress_ll
+   8.1 %     15061  libopen-pal.so.40.30.2   opal_timer_linux_get_cycles_sys_timer
+   7.0 %     13031  libfesom.so              io_meandata_mp_update_means_
+   5.8 %     10870  libmpi.so.40.30.2        ompi_coll_libnbc_progress
+   5.2 %      9786  libpthread-2.28.so       pthread_spin_lock
+   1.7 %      3209  libfesom.so              g_cvmix_idemix_mp_calc_cvmix_idemix_
+   1.2 %      2293  libmpi.so.40.30.2        mca_pml_ucx_progress
+   0.9 %      1736  libpthread-2.28.so       pthread_self@GLIBC_2.2.5
+   0.9 %      1635  fesom                    __svml_pow1_ha_l9
+   0.7 %      1381  libuct.so.0.0.0          uct_mm_ep_am_bcopy
+   0.7 %      1378  libc-2.28.so             __memmove_avx_unaligned_erms
+   0.7 %      1344  libucp.so.0.0.0          _init
+   0.7 %      1317  libopen-pal.so.40.30.2   ompi_sync_wait_mt
+   0.7 %      1245  libfesom.so              oce_tra_adv_fct_
+   0.6 %      1120  libc-2.28.so             __memset_avx2_unaligned_erms
+   0.6 %      1050  libucp.so.0.0.0          ucp_eager_only_handler
+   0.6 %      1034  libopen-pal.so.40.30.2   _init
+   0.5 %      1022  libmpi.so.40.30.2        pml_ucx_generic_datatype_finish
+   0.5 %       907  libfesom.so              diff_part_hor_redi_
+   0.5 %       899  fesom                    __svml_asin1_ha_l9
+   0.5 %       852  libfesom.so              evpdynamics_m_
+   0.4 %       795  libfesom.so              fill_up_dn_grad_
+##### rank 1791
+# total 233310 dropped 1089 t0 1790604815.622 binsec 10
+total samples: 188482 in window 200 s
+
+== by library
+  21.3 %     40118  libfesom.so
+  20.3 %     38299  libopen-pal.so.40.30.2
+  14.3 %     26884  libucp.so.0.0.0
+  12.4 %     23355  libuct.so.0.0.0
+  10.1 %     19034  libuct_ib.so.0.0.0
+   8.1 %     15342  libmpi.so.40.30.2
+   6.8 %     12823  libpthread-2.28.so
+   2.7 %      5080  libiomp5.so
+   2.3 %      4319  fesom
+   1.5 %      2780  libc-2.28.so
+   0.1 %       240  libmpi_mpifh.so.40.30.0
+   0.1 %       104  [vdso]
+   0.0 %        79  libstdc++.so.6.0.25
+   0.0 %        12  libucs.so.0.0.0
+   0.0 %         8  ld-2.28.so
+
+== top 25 routines
+  12.4 %     23415  libucp.so.0.0.0          ucp_worker_progress
+  11.5 %     21684  libuct.so.0.0.0          uct_mm_iface_progress
+  11.0 %     20670  libopen-pal.so.40.30.2   opal_progress
+  10.1 %     19021  libuct_ib.so.0.0.0       uct_dc_mlx5_iface_progress_ll
+   7.9 %     14943  libopen-pal.so.40.30.2   opal_timer_linux_get_cycles_sys_timer
+   7.1 %     13432  libfesom.so              io_meandata_mp_update_means_
+   5.4 %     10129  libmpi.so.40.30.2        ompi_coll_libnbc_progress
+   4.9 %      9198  libpthread-2.28.so       pthread_spin_lock
+   2.1 %      4022  libfesom.so              evpdynamics_m_
+   1.8 %      3367  libfesom.so              g_cvmix_idemix_mp_calc_cvmix_idemix_
+   1.5 %      2843  libpthread-2.28.so       pthread_self@GLIBC_2.2.5
+   1.1 %      2125  libmpi.so.40.30.2        mca_pml_ucx_progress
+   0.9 %      1705  fesom                    __svml_pow1_ha_l9
+   0.9 %      1664  libuct.so.0.0.0          uct_mm_ep_am_bcopy
+   0.8 %      1454  libc-2.28.so             __memmove_avx_unaligned_erms
+   0.7 %      1254  libopen-pal.so.40.30.2   ompi_sync_wait_mt
+   0.6 %      1211  libc-2.28.so             __memset_avx2_unaligned_erms
+   0.6 %      1164  libucp.so.0.0.0          _init
+   0.6 %      1119  libfesom.so              oce_tra_adv_fct_
+   0.5 %       983  libfesom.so              diff_part_hor_redi_
+   0.5 %       948  libmpi.so.40.30.2        pml_ucx_generic_datatype_finish
+   0.5 %       917  fesom                    __svml_asin1_ha_l9
+   0.5 %       914  libiomp5.so              __kmp_acquire_queuing_lock
+   0.4 %       764  libucp.so.0.0.0          ucp_eager_only_handler
+   0.4 %       741  libfesom.so              cvmix_idemix_mp_integrate_idemix_

@@ -1,0 +1,15 @@
+nodes: prod-077  (1)
+Model name:          AMD EPYC 7702 64-Core Processor
+CPU max MHz:         2183.5930
+CPU min MHz:         1500.0000
+performance
+MHz under load: 2331
+=== default UCX ===
+CORE ranks=128  cache_kernel_GFlops_per_rank=5.534  (check 0.909596)
+RESULT ranks=128  pingpong_8B_us=0.61  pingpong_1MiB_GBs=4.34  allreduce_8B_us=7.80  halo6x16KiB_us=113.6  triad_GBs_per_rank=2.48  (check=128 y)
+=== UCX_TLS=rc_x,sm,self ===
+CORE ranks=128  cache_kernel_GFlops_per_rank=5.576  (check 0.909596)
+RESULT ranks=128  pingpong_8B_us=0.61  pingpong_1MiB_GBs=4.34  allreduce_8B_us=7.75  halo6x16KiB_us=114.8  triad_GBs_per_rank=2.47  (check=128 y)
+=== UCX_TLS=dc_x,sm,self ===
+CORE ranks=128  cache_kernel_GFlops_per_rank=5.523  (check 0.909596)
+RESULT ranks=128  pingpong_8B_us=0.61  pingpong_1MiB_GBs=4.34  allreduce_8B_us=7.78  halo6x16KiB_us=115.1  triad_GBs_per_rank=2.48  (check=128 y)

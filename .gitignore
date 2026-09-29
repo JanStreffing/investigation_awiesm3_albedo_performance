@@ -1,0 +1,12 @@
+# LaTeX build files
+*.aux
+*.log
+*.out
+!bench/*.out
+*.toc
+*.synctex.gz
+# compiled tools (build from bench/*.c)
+*.so
+bench/mpibench_albedo
+bench/pmcwin
+__pycache__/

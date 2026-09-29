@@ -1,0 +1,33 @@
+node: prod-081
+=== 2048B: default
+RESULT ranks=128  pingpong_8B_us=0.62  pingpong_1MiB_GBs=4.36  allreduce_8B_us=7.78  halo6x2048B_us=21.7  
+=== 2048B: levante-like mm,knem,cma
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.38  allreduce_8B_us=7.28  halo6x2048B_us=22.2  
+=== 2048B: posix only (no syscalls)
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.38  allreduce_8B_us=7.24  halo6x2048B_us=22.5  
+=== 2048B: sysv only
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.39  allreduce_8B_us=7.29  halo6x2048B_us=21.7  
+=== 2048B: cma only
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.38  allreduce_8B_us=7.22  halo6x2048B_us=22.5  
+=== 2048B: knem
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.38  allreduce_8B_us=7.24  halo6x2048B_us=21.8  
+=== 2048B: no zero-copy (eager up to 256K)
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.38  allreduce_8B_us=7.28  halo6x2048B_us=22.5  
+=== 2048B: ob1+vader (no UCX)
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.37  allreduce_8B_us=7.26  halo6x2048B_us=21.9  
+=== 16384B: default
+RESULT ranks=128  pingpong_8B_us=0.61  pingpong_1MiB_GBs=4.37  allreduce_8B_us=7.90  halo6x16384B_us=114.6  
+=== 16384B: levante-like mm,knem,cma
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.39  allreduce_8B_us=7.28  halo6x16384B_us=245.6  
+=== 16384B: posix only (no syscalls)
+RESULT ranks=128  pingpong_8B_us=0.67  pingpong_1MiB_GBs=2.38  allreduce_8B_us=7.34  halo6x16384B_us=244.7  
+=== 16384B: sysv only
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.38  allreduce_8B_us=7.24  halo6x16384B_us=243.4  
+=== 16384B: cma only
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.39  allreduce_8B_us=7.22  halo6x16384B_us=272.7  
+=== 16384B: knem
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.38  allreduce_8B_us=7.25  halo6x16384B_us=245.9  
+=== 16384B: no zero-copy (eager up to 256K)
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.38  allreduce_8B_us=7.33  halo6x16384B_us=241.8  
+=== 16384B: ob1+vader (no UCX)
+RESULT ranks=128  pingpong_8B_us=0.66  pingpong_1MiB_GBs=2.37  allreduce_8B_us=7.23  halo6x16384B_us=245.1  

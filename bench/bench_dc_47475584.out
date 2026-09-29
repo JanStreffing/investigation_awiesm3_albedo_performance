@@ -1,0 +1,37 @@
+nodes: prod-[121-123,125,140,147,150-157,159-160]
+=== 2048B: default
+RESULT ranks=2048  pingpong_8B_us=1.61  pingpong_1MiB_GBs=11.43  allreduce_8B_us=50.41  halo6x2048B_us=163.7  
+=== 16384B: default
+RESULT ranks=2048  pingpong_8B_us=1.61  pingpong_1MiB_GBs=11.41  allreduce_8B_us=47.36  halo6x16384B_us=303.2  
+=== 2048B: dc_x only
+RESULT ranks=2048  pingpong_8B_us=1.60  pingpong_1MiB_GBs=11.43  allreduce_8B_us=46.60  halo6x2048B_us=69.6  
+=== 16384B: dc_x only
+RESULT ranks=2048  pingpong_8B_us=1.61  pingpong_1MiB_GBs=11.43  allreduce_8B_us=51.21  halo6x16384B_us=288.8  
+=== 2048B: dc_x NUM_DCI=16
+RESULT ranks=2048  pingpong_8B_us=1.61  pingpong_1MiB_GBs=11.43  allreduce_8B_us=60.65  halo6x2048B_us=157.2  
+=== 16384B: dc_x NUM_DCI=16
+RESULT ranks=2048  pingpong_8B_us=1.63  pingpong_1MiB_GBs=11.37  allreduce_8B_us=52.20  halo6x16384B_us=372.4  
+=== 2048B: dc_x NUM_DCI=32
+RESULT ranks=2048  pingpong_8B_us=1.62  pingpong_1MiB_GBs=11.42  allreduce_8B_us=55.16  halo6x2048B_us=141.1  
+=== 16384B: dc_x NUM_DCI=32
+RESULT ranks=2048  pingpong_8B_us=1.60  pingpong_1MiB_GBs=11.43  allreduce_8B_us=61.62  halo6x16384B_us=323.3  
+=== 2048B: dc_x NUM_DCI=64
+RESULT ranks=2048  pingpong_8B_us=1.60  pingpong_1MiB_GBs=11.43  allreduce_8B_us=48.75  halo6x2048B_us=133.5  
+=== 16384B: dc_x NUM_DCI=64
+RESULT ranks=2048  pingpong_8B_us=1.60  pingpong_1MiB_GBs=11.43  allreduce_8B_us=51.50  halo6x16384B_us=304.9  
+=== 2048B: dc_x tx=rand NUM_DCI=32
+RESULT ranks=2048  pingpong_8B_us=1.62  pingpong_1MiB_GBs=11.43  allreduce_8B_us=21.16  halo6x2048B_us=23.5  
+=== 16384B: dc_x tx=rand NUM_DCI=32
+RESULT ranks=2048  pingpong_8B_us=1.62  pingpong_1MiB_GBs=11.41  allreduce_8B_us=23.52  halo6x16384B_us=148.2  
+=== 2048B: dc_x unified NUM_DCI=32
+RESULT ranks=2048  pingpong_8B_us=1.61  pingpong_1MiB_GBs=11.41  allreduce_8B_us=109.95  halo6x2048B_us=206.6  
+=== 16384B: dc_x unified NUM_DCI=32
+RESULT ranks=2048  pingpong_8B_us=1.64  pingpong_1MiB_GBs=11.42  allreduce_8B_us=102.03  halo6x16384B_us=289.3  
+=== 2048B: ud_x only
+RESULT ranks=2048  pingpong_8B_us=1.52  pingpong_1MiB_GBs=8.82  allreduce_8B_us=18.60  halo6x2048B_us=131.7  
+=== 16384B: ud_x only
+RESULT ranks=2048  pingpong_8B_us=1.53  pingpong_1MiB_GBs=8.80  allreduce_8B_us=25.88  halo6x16384B_us=121.8  
+=== 2048B: rc_x reference
+RESULT ranks=2048  pingpong_8B_us=1.37  pingpong_1MiB_GBs=9.35  allreduce_8B_us=20.71  halo6x2048B_us=28.0  
+=== 16384B: rc_x reference
+RESULT ranks=2048  pingpong_8B_us=1.38  pingpong_1MiB_GBs=9.17  allreduce_8B_us=20.39  halo6x16384B_us=172.4  

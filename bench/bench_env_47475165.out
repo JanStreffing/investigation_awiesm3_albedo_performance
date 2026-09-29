@@ -1,0 +1,15 @@
+nodes: prod-[201-205,207-217]
+=== default
+RESULT ranks=2048  pingpong_8B_us=1.60  pingpong_1MiB_GBs=11.44  allreduce_8B_us=53.45  halo6x16KiB_us=342.6  triad_GBs_per_rank=2.48  (check=2048 y)
+=== pml=ucx explicit
+RESULT ranks=2048  pingpong_8B_us=1.59  pingpong_1MiB_GBs=11.44  allreduce_8B_us=48.74  halo6x16KiB_us=325.7  triad_GBs_per_rank=2.48  (check=2048 y)
+=== rc_x,sm,self
+RESULT ranks=2048  pingpong_8B_us=1.35  pingpong_1MiB_GBs=9.11  allreduce_8B_us=19.53  halo6x16KiB_us=180.0  triad_GBs_per_rank=2.47  (check=2048 y)
+=== levante-like: dc_x,sm,self unified
+RESULT ranks=2048  pingpong_8B_us=1.59  pingpong_1MiB_GBs=11.42  allreduce_8B_us=112.29  halo6x16KiB_us=277.4  triad_GBs_per_rank=2.48  (check=2048 y)
+=== rc_x,sm,self + coll/han
+RESULT ranks=2048  pingpong_8B_us=1.35  pingpong_1MiB_GBs=9.29  allreduce_8B_us=22.89  halo6x16KiB_us=126.1  triad_GBs_per_rank=2.51  (check=2048 y)
+=== dc_x,sm,self unified + coll/han
+RESULT ranks=2048  pingpong_8B_us=1.59  pingpong_1MiB_GBs=11.35  allreduce_8B_us=89.02  halo6x16KiB_us=398.9  triad_GBs_per_rank=2.66  (check=2048 y)
+=== default + coll/han
+RESULT ranks=2048  pingpong_8B_us=1.58  pingpong_1MiB_GBs=11.43  allreduce_8B_us=23.97  halo6x16KiB_us=210.8  triad_GBs_per_rank=2.48  (check=2048 y)
