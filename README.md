@@ -37,17 +37,19 @@ What made the difference:
   bandwidth. A second OpenMP thread per rank costs more than it gains.
 - **Components share nodes.** XIOS and the runoff mapper run on the OpenIFS
   nodes (esm_tools `interleave_into`, `ranks_per_node`; esm-tools/esm_tools#1603).
-- OpenIFS is now the limiting component. More OpenIFS ranks (768 x 2 instead of
-  384 x 4) made it slower.
+- OpenIFS and FESOM now share the critical path: OpenIFS's radiation and output
+  steps are the longest intervals, FESOM is longer in over half of the rest. More
+  OpenIFS ranks (768 x 2 instead of 384 x 4) made OpenIFS slower.
 
 ## Files
 
 - `albedo_performance.tex` / `.pdf` — the living report: the campaign in the
   order it happened, the current state, falsified claims (struck through, with
-  the observation that killed them), method notes. The PDF covers the work up
-  to the 33-node layout of 2026-09-29; the node-sharing, clock and 25-node
-  rounds summarised above are still to be added.
+  the observation that killed them), method notes. Updated 2026-09-29, up to
+  the 25-node production layout.
 - `fig_albedo_vs_levante.png` — per-day speed of the same configuration on both machines.
+- `fig_fesom_spread.png`, `fig_critical_path.png` — FESOM compute and clock against ranks per node;
+  OpenIFS and FESOM compute per coupling interval in the 25-node layout (`bench/make_figs_20260929.py`).
 - `bench/mpibench.c`, `bench/*.slurm`, `bench/*.out` — MPI point-to-point and
   collective benchmarks, albedo against levante, with their outputs.
 - `bench/pcsampler.c`, `bench/pcs_report.py`, `bench/prof_*.txt` — an

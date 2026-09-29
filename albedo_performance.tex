@@ -1,17 +1,17 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage[margin=2.2cm]{geometry}
-\usepackage{graphicx,booktabs,float,xcolor,hyperref}
+\usepackage{graphicx,booktabs,float,xcolor,hyperref,xurl}
 \usepackage[normalem]{ulem}
 \newcommand{\dead}[1]{\textcolor{gray}{\sout{#1}}}
 \title{AWI-ESM3 on albedo: why the coupled runs are slow}
 \author{Jan Streffing}
-\date{Last updated: 2026-09-28}
+\date{Last updated: 2026-09-29}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-The AWI-ESM3 CMIP7 spin-up (TCO95L91 OpenIFS, CORE3 FESOM2 with cavities, LPJ-GUESS, XIOS, 47 nodes) moved from levante to albedo on 2026-09-26. On albedo it runs at 49 to 57 SYPD, against 83 SYPD for the same configuration on levante and about 100 SYPD in Miguel Andr\'es-Mart\'inez's earlier albedo tests. Where we are: at the 1200\,s FESOM step FESOM limits the coupled model on albedo; at 1800\,s FESOM and OpenIFS are balanced on both machines, and albedo is about 1.1 times slower than levante in steady state. Returning FESOM to an 1800\,s time step brings albedo from 56 to 72\,SYPD on the same 47 nodes. The remaining machine factor over levante is not explained by any MPI setting we could test: three transport and collective settings that make MPI benchmarks 2 to 7 times faster leave the model unchanged. A profile of FESOM on both machines shows its ranks polling in MPI for two thirds to three quarters of the time on levante as well as on albedo: FESOM at 1792 ranks is communication-bound everywhere, and albedo is 1.23 times slower in the same profiled run (Section~\ref{sec:state}). The timeline is in Section~\ref{sec:timeline}, falsified explanations are kept in Section~\ref{sec:falsified}.
+The AWI-ESM3 CMIP7 spin-up (TCO95L91 OpenIFS, CORE3 FESOM2 with cavities, LPJ-GUESS, XIOS, 47 nodes) moved from levante to albedo on 2026-09-26 and ran there at 49 to 57\,SYPD, against 83\,SYPD on levante. This report follows why, and how the layout was changed until the model ran faster on fewer nodes. Where we are (2026-09-29): 25 nodes step 2.40\,s per model day (about 99\,SYPD in steady state, 6.1 node-hours per model year against 19.8 in the first albedo legs), with FESOM at 1800\,s and without OpenMP threads, its 768 ranks spread 96 per node, XIOS and the runoff mapper on the OpenIFS nodes, and OpenIFS and FESOM now sharing the critical path. The steps are in Section~\ref{sec:timeline}, the current state and open questions in Section~\ref{sec:state}, falsified explanations in Section~\ref{sec:falsified}.
 \end{abstract}
 
 \section{The campaign, in the order it happened}\label{sec:timeline}
@@ -79,7 +79,7 @@ The ccnice leg 2120--2129 (job 47473364) ran at 0.202\,s per OpenIFS step (48.9\
 
 
 \subsection{TEST\_perfA: FESOM with two threads (2026-09-28)}
-A 2-month leg with FESOM $1792\times2$ (61 nodes) ran at 0.149\,s per OpenIFS step (66.4\,SYPD) against 0.176\,s (56.0\,SYPD) with one thread. FESOM's compute per OpenIFS step fell only 8\,\% (0.145 to 0.134\,s): the EVP by 23\,\%, the ocean by 7\,\%, while the ssh solver got 20\,\% slower. Doubling FESOM's cores therefore buys little; FESOM on albedo is limited by memory bandwidth and communication, not by arithmetic. FESOM's setup took 133\,s in this run against 313 to 335\,s in all earlier albedo runs (mesh read 22 against 66--72\,s), with the same files on the same filesystem, so the initialisation cost varies from job to job.
+A 2-month leg with FESOM $1792\times2$ (61 nodes) ran at 0.149\,s per OpenIFS step (66.4\,SYPD) against 0.176\,s (56.0\,SYPD) with one thread. FESOM's compute per OpenIFS step fell only 8\,\% (0.145 to 0.134\,s): the EVP by 23\,\%, the ocean by 7\,\%, while the ssh solver got 20\,\% slower. Doubling FESOM's cores therefore buys little; FESOM at 1792 ranks is limited by communication, not by arithmetic. (Hardware counters later showed that memory bandwidth is not the limit either, Table~\ref{tab:pmc}.) FESOM's setup took 133\,s in this run against 313 to 335\,s in all earlier albedo runs (mesh read 22 against 66--72\,s), with the same files on the same filesystem, so the initialisation cost varies from job to job.
 
 \subsection{LUCIA: FESOM is the limiter (2026-09-28)}
 With \texttt{oasis3mct.use\_lucia: true} OASIS3-MCT 5 writes \texttt{load\_balancing\_info.txt} and one \texttt{timeline\_<component>.nc} per component into the work directory. For TEST\_perfA:
@@ -252,7 +252,7 @@ levante TEST\_1800, leadclose & $1792\times1$, 14 nodes & 2.77 & 167.3 & 170.7 &
 SST stays within 31.6 to 32.2\,$^\circ$C maximum and $-2.0$\,$^\circ$C minimum in both runs. After two months the root-mean-square SST difference is 0.67\,K between perfH and perfI (same partition, different binary) and 0.73\,K between perfI and perfJ (same binary, different partition), the size of the chaotic divergence; the global means agree within 0.08\,K. The reordered coupling set therefore works end to end.
 
 \subsection{Fewer nodes: XIOS packed, FESOM and OpenIFS with more threads (2026-09-29)}
-XIOS is MPI-only; its 128 threads per server only reserved whole nodes for memory. The largest XIOS server reaches 44 to 46\,GB in a 10-year leg (task 2249 in all three production legs) and 8.6\,GB in two months, so four servers fit on a 257\,GB node. Rank thread counts are kept at 2, 4 or 8, because albedo's cores share L3 in groups of 4 and a 3-thread rank would straddle groups. New node-aware FESOM partitions \texttt{dist\_384} ($n\_part = 12, 32$) and \texttt{dist\_768} ($12, 64$) were made with \texttt{fesom\_meshpart} in a private copy of the mesh, and the coupling set was reordered to each with the same checks as for 1024. All runs use the new FESOM binary.
+XIOS is MPI-only; its 128 threads per server only reserved whole nodes for memory. The largest XIOS server reaches 44 to 46\,GB in a 10-year leg (task 2249 in all three production legs) and 8.6\,GB in two months, so four servers fit on a 257\,GB node of their own (next to OpenIFS ranks only two do, see the production layout below). Rank thread counts are kept at 2, 4 or 8, because albedo's cores share L3 in groups of 4 and a 3-thread rank would straddle groups. New node-aware FESOM partitions \texttt{dist\_384} ($n\_part = 12, 32$) and \texttt{dist\_768} ($12, 64$) were made with \texttt{fesom\_meshpart} in a private copy of the mesh, and the coupling set was reordered to each with the same checks as for 1024. All runs use the new FESOM binary.
 \begin{table}[H]\centering\small
 \begin{tabular}{llrrrrr}\toprule
 run & layout & nodes & s per model day & node$\cdot$s per model day & FESOM computing & OpenIFS computing\\\midrule
@@ -266,7 +266,83 @@ perfN & perfK + OpenIFS $192\times8$ & 35 & 2.98 & 104 & 199.7 & 210.3\\\bottomr
 \end{table}
 XIOS servers were at most 15\,\% busy in perfK (24\,\% in perfI). SST stays within $-2.1$ and 32.7\,$^\circ$C in all runs, and the runs with new partitions differ from perfI by 0.64 to 0.72\,K RMS after two months, the chaotic spread. The XIOS memory growth over a full leg is not covered by two-month tests; a 10-year leg in the packed layout has to confirm that no server exceeds 64\,GB.
 
-\section{State of the albedo performance (2026-09-28)}\label{sec:state}
+\subsection{Sharing nodes: XIOS and rnfmap on the OpenIFS nodes (2026-09-29)}
+esm\_tools' \texttt{taskset} launcher decided placement in two places that had to agree: the hostlist came from a running core counter in the job script, while \texttt{prog\_<model>.sh} pinned each rank to $(\mathrm{rank}\times\mathrm{threads}) \bmod 128$. The two only agree while every component boundary falls on a node edge, so no two components could share a node, and XIOS and the one-rank river-runoff mapper each held whole nodes. A new placement module computes one (node, first core) pair per global rank, writes it to \texttt{work/rank\_placement}, and both the hostlist and every \texttt{prog\_<model>.sh} read it (esm-tools/esm\_tools\#1603, branch \texttt{feat/awiesm3-v3.4-co2}). A component with \texttt{interleave\_into: [oifs]} takes cores at the end of OpenIFS nodes, \texttt{ranks\_per\_node} of them per node, and only on as many nodes as it needs. Every rank starts on a multiple of its thread count and never crosses a node, which keeps 1-, 2-, 4- and 8-thread ranks inside one 4-core L3 group.
+\begin{table}[H]\centering\small
+\begin{tabular}{llrr}\toprule
+run & layout & nodes & s per model day\\\midrule
+perfM & FESOM $768\times2$, XIOS $16\times32$ on own nodes, old placement & 33 & 2.86\\
+placeA & the same through the placement table & 33 & 2.79\\
+placeB & XIOS $16\times4$ four per OpenIFS node, rnfmap on an OpenIFS node & 29 & 2.79\\\bottomrule
+\end{tabular}
+\caption{Steady-state stepping, days 2--58. Sharing nodes frees four nodes at unchanged speed. placeA reproduces perfM's node and core sets; its hostlist is byte-identical to the one the old code wrote.}\label{tab:place}
+\end{table}
+
+\subsection{Reproducibility and the lock-free sea-ice solvers (2026-09-29)}
+perfM and placeA use the same binary, partition, thread counts and inputs, and differ only in the nodes they ran on and the core order of the LPJ-GUESS and XIOS blocks, yet their output differs from the first model day. The build has \texttt{OPENMP\_REPRODUCIBLE=OFF}, and the modified EVP solver we run (\texttt{whichEVP}=1, \texttt{ice\_maEVP.F90}) still accumulated element contributions into nodes under OpenMP locks, so the summation order followed thread timing. FESOM's thread-invariance CI test runs \texttt{whichEVP}=0 and never exercised mEVP. A port of mEVP to node-owned gathers (each node sums its own elements in a fixed order) made two identical runs at $768\times2$ (mevpB1, mevpB2) bit-identical over all 59 days, and FESOM computed 157--161\,s against 179\,s in placeB.
+
+The same day FESOM PRs \#1097 (mEVP and aEVP gathers, with CI variants for both), \#1098 (split-explicit barotropic gathers and a restart fix for \texttt{d\_eta}) and \#1099 (diagnostics and IDEMIX2 gathers, the lock array \texttt{partit\%plock} removed, barriers before collectives dropped) were reviewed and merged. They make the port redundant; \texttt{main} was merged into \#1060 again (53e095ec) and that build used from here on.
+\begin{table}[H]\centering\small
+\begin{tabular}{llll}\toprule
+runs & what differs & result & s per model day\\\midrule
+nolockB1 / nolockB2 & nothing (rerun, $768\times2$) & bit-identical, 59 days & 2.65 / 2.63\\
+nolockB1 / nolockB4 & FESOM 2 against 1 thread, same cores & differ from day 1 & 2.65 / 2.51\\
+perfI / nolockI & 1ef85546 against 53e095ec, $1792\times1$ & differ from day 1 & 2.72 / 2.79\\\bottomrule
+\end{tabular}
+\caption{Bit-comparison of daily FESOM output (SST, sea-ice concentration and velocity, SSH). A rerun at a fixed thread count reproduces exactly; a different thread count does not. Every field differs after one day, including the atmospheric stress over ice returned by OpenIFS, so a small FESOM difference spreads through the coupling within the first day.}\label{tab:repro}
+\end{table}
+The standalone CI tests (pi mesh, 1 against 4 threads, now including mEVP, aEVP and split-explicit) pass, so the thread dependence sits in code our coupled configuration uses and the CI does not: CORE3 with cavities, \texttt{linfs}, TKE+IDEMIX mixing, the OASIS coupling. TKE and IDEMIX contain no OpenMP; the OpenMP sum reductions left after \#1099 run at initialisation or in diagnostics. The source is not yet located. Within an experiment the FESOM thread count therefore has to stay fixed. nolockI computed 199\,s in FESOM against perfI's 182\,s; at one thread the gathers do more arithmetic than the lock-free-at-one-thread scatter they replace, but one run each cannot separate that from node variation.
+
+\subsection{One thread on two cores: FESOM is faster without OpenMP (2026-09-29)}
+nolockB4 reserved and pinned two cores per FESOM rank, exactly as nolockB1, but started FESOM through a wrapper (\texttt{bin/fesom\_omp1.sh}) that sets \texttt{OMP\_NUM\_THREADS=1}. With the second core of each pair idle, FESOM computed 135\,s against 161\,s with two threads on the same cores, and the model stepped 2.51 against 2.65\,s per model day. The same 768 single-threaded ranks packed 128 per node on 6 nodes compute 228--238\,s (pmcP, mevpB1t) and step 3.32--3.40\,s per model day on 23 nodes: spreading costs 6 more nodes and still uses 7\,\% fewer node-seconds per model day (73 against 78). Figure~\ref{fig:spread}(a) collects the layouts.
+
+\begin{figure}[H]\centering
+\includegraphics[width=\textwidth]{fig_fesom_spread.png}
+\caption{(a) FESOM computing time per 2-month leg (LUCIA timelines) for the same 768 ranks and binary in four layouts. The second OpenMP thread costs 19\,\% against leaving its core idle; packing 128 ranks per node costs 69\,\%. (b) Clock of the busy FESOM cores while they run, from hardware counters: the fewer cores of a node are busy, the higher the rest boost above the 2.0\,GHz base clock. DRAM traffic stays at 40 to 70\,GB/s per node in every layout, far below what a node delivers, so the idle cores buy clock and some cache, not bandwidth.}\label{fig:spread}
+\end{figure}
+
+\subsection{Hardware counters: idle neighbours buy clock, not bandwidth (2026-09-29)}
+Albedo has neither \texttt{perf} nor likwid, but \texttt{perf\_event\_paranoid}=2 allows user-mode counters on one's own processes. \texttt{bench/pmcwin.c} attaches to every thread of every FESOM and OpenIFS process on a node for 30\,s once OpenIFS has passed model day 10 (started once per node by \texttt{bin/pmcwrap.sh} through \texttt{bin/pmcmon.sh}). It counts task clock, cycles, instructions and three Zen2 events for lines read from DRAM: demand L1D fills (0x43, umask 0x48), L1D hardware-prefetch fills (0x5A, umask 0x48) and L2 prefetches that miss L2 and L3 (0x72). \texttt{bench/pmc\_summary.py} turns them into clock while running, instructions per cycle and DRAM traffic.
+\begin{table}[H]\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llrrr}\toprule
+component & layout (run) & GHz & IPC & DRAM, GB/s per node\\\midrule
+FESOM & 64 per node, 1 thread (pmcS, pmcO2) & 2.84 & 1.90 & 39\\
+FESOM & 96 per node, 1 thread (fes96) & 2.55 & 1.73 & 66\\
+FESOM & 128 per node, 1 thread (pmcP) & 2.33 & 1.71 & $\approx 70$\\
+OpenIFS & $384\times4$, 4 threads (pmcS, pmcP, fes96) & 2.44--2.49 & 1.32--1.40 & 19--25\\
+OpenIFS & 2 threads on 4 reserved cores (pmcO2) & 2.81 & 1.84 & 21\\
+OpenIFS & $768\times2$, 2 threads on 2 cores (oifs768) & 2.41 & 1.54 & 26\\\bottomrule
+\end{tabular}
+\caption{Counter windows of 30\,s around model day 10. The pmcP value is doubled from 64 sampled of the 128 ranks per node (a limit in the first \texttt{pmcwin}, since fixed). A single busy core on an otherwise idle node ran at 3.28\,GHz.}\label{tab:pmc}
+\end{table}
+Clock and instructions per cycle together give a spread FESOM rank 1.36 times the instruction rate of a packed one; FESOM's computing time differs by 1.65. The remainder is presumably waiting in MPI, which grows when every rank is slower; the counters cannot show it, since polling also retires instructions. OpenIFS with two threads on its four reserved cores computed as fast as with four (177 against 175\,s): its third and fourth threads contribute nothing at TCO95.
+
+\subsection{Critical path per coupling step (2026-09-29)}
+\texttt{bench/lucia\_steps.py} splits the LUCIA timelines into the 1414 coupling intervals of a 2-month leg (one per 3600\,s OpenIFS step, two FESOM steps each) and gives each component's computing and waiting per interval. In pmcS (FESOM 64 per node, 29 nodes, 2.53\,s per model day, about 94\,SYPD in steady state) OpenIFS is the longer component even in its cheapest intervals (88 to 100\,ms against FESOM's 77 to 88), longer still in every third interval, which carries the radiation (115 to 140\,ms), and in one output interval per day (about 210\,ms). FESOM is longer only in its own daily output interval (158\,ms). Summing the longer of the two per interval gives a critical path of 163.0\,s: OpenIFS 10 or 20\,\% faster would shorten it by 7 or 13\,\%, an infinitely fast FESOM by 3\,\%.
+
+\subsection{More OpenIFS ranks, fewer FESOM cores (2026-09-29)}
+From the pmcS intervals, fewer FESOM ranks do not pay: at 640, 512 or 384 ranks FESOM would move onto the critical path and cost 6, 21 or 54\,\% in speed for $-1$, $+4$ or $+22$\,\% node-seconds. Fewer cores for the same 768 ranks does: a second option of the placement module, \texttt{ranks\_per\_node} on a component that is not interleaved, starts it on fresh nodes and spreads that many ranks evenly over each node's cores, at 96 per node three of every four, one idle core per L3 group. OpenIFS was tried at $768\times2$ on the same nodes as $384\times4$.
+\begin{table}[H]\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lllrrrr}\toprule
+run & FESOM & OpenIFS & nodes & s per model day & FESOM computing & OpenIFS computing\\\midrule
+pmcS & 64 per node & $384\times4$ & 29 & 2.53 & 138.1 & 174.8\\
+oifs768 & 64 per node & $768\times2$ & 29 & 3.02 & 141.9 & 197.7\\
+fes96 & 96 per node & $384\times4$ & 25 & 2.51 & 158.0 & 173.6\\
+fes96o768 & 96 per node & $768\times2$ & 25 & 2.81 & 161.1 & 185.2\\\bottomrule
+\end{tabular}
+\caption{FESOM $768\times1$ throughout; XIOS four per OpenIFS node. FESOM at 96 per node runs at 2.55\,GHz, computes 14\,\% longer and still stays shorter than OpenIFS, so the model is as fast on 4 fewer nodes. OpenIFS at $768\times2$ packed is slower than $384\times4$ (2.41\,GHz, 1.54 IPC). The running experiments cannot change OpenIFS's decomposition anyway: their OpenIFS restarts are tied to it.}\label{tab:fes96}
+\end{table}
+
+\subsection{Production layout (2026-09-29)}
+The largest XIOS server grows to 44--46\,GB in a 10-year leg. Four next to 28 OpenIFS ranks of about 3\,GB would need about 268\,GB on a 257\,GB node late in a leg; two per node need about 182\,GB and still fit the 29 nodes. TEST\_prodlayout ran FESOM 64 per node on two reserved cores with one thread, XIOS two per OpenIFS node and rnfmap on an OpenIFS node, with esm\_tools installed into the experiment's own virtual environment from GitHub, as production does: 2.39\,s per model day on 29 nodes, OpenIFS computing 166 against 173\,s in nolockB4 (one run each). TEST\_best25, the same with FESOM at 96 ranks per node, stepped 2.40\,s per model day on 25 nodes: about 99\,SYPD in steady state and 6.1 node-hours per model year, against 14.5 for perfH (47 nodes, 1800\,s) and 19.8 in the first albedo legs (47 nodes, 1200\,s, 4.16\,s per model day).
+
+\begin{figure}[H]\centering
+\includegraphics[width=\textwidth]{fig_critical_path.png}
+\caption{Computing time per coupling interval in TEST\_best25, averaged over the 59 model days by position in the day. In ordinary intervals FESOM (two steps, 92--102\,ms) is now as long as OpenIFS (88--95\,ms); the long intervals are OpenIFS's radiation steps (every third, 115--133\,ms), one OpenIFS output interval (231\,ms) and one FESOM output interval (146\,ms) per day. FESOM is the longer component in 823 of 1414 intervals. The critical path is 163.7\,s; OpenIFS 20\,\% faster alone would shorten it by 8.5\,\%, an infinitely fast FESOM by 7\,\%.}\label{fig:critpath}
+\end{figure}
+Both production runscripts (PICAL\_ccnice from leg 2130, PICAL\_crunveg from leg 2120) now use this layout with the 53e095ec build, OpenIFS unchanged at $384\times4$. Their frozen esm\_tools virtual environments (6de9ed453, without the placement module) were moved aside, so the next submission rebuilds them from \texttt{feat/awiesm3-v3.4-co2} at 322f0ed1f. They have not been resubmitted yet.
+
+\section{State of the albedo performance (2026-09-29)}\label{sec:state}
 Proven:
 \begin{itemize}
 \item Albedo runs the same configuration 1.49 times slower than levante (15483 against 10385\,s per 10-year leg).
@@ -275,7 +351,7 @@ Proven:
 \item Communication-bound parts are 41\,\% (ssh solver) and 83\,\% (ice EVP) slower, the OASIS setup six times.
 \item At 1200\,s FESOM limits the coupled model on albedo (LUCIA timelines: FESOM 294\,s, OpenIFS 204\,s computing per 2 months).
 \item FESOM's cost per model day doubled since August: 1200\,s instead of 1800\,s time step, TKE+IDEMIX instead of KPP, $K_{GM}$ 2500 instead of 1000.
-\item FESOM gains only 8\,\% from a second OpenMP thread.
+\item At 1792 ranks FESOM gains only 8\,\% from a second OpenMP thread; at 768 ranks a second thread costs 19\,\% against leaving its core idle.
 \item The FESOM time step of 1800\,s gives 72\,SYPD on 47 nodes against 56 at 1200\,s; both production runscripts now use 1800\,s.
 \item No MPI setting available on albedo speeds up the model: \texttt{coll/han} and the DC random send policy help the benchmark but not FESOM, RC fails at this size, and HCOLL is not built into any albedo OpenMPI.
 \item Inside one node the halo exchange is twice as slow as on levante with every transport available.
@@ -288,7 +364,12 @@ Proven:
 \item OpenIFS is 1.22 times and FESOM 1.25 times slower on albedo than on levante in computing time.
 \item FESOM \texttt{main} with the OpenMP performance stack (\#1060 merge 1ef85546) computes 13\,\% less at $1792\times1$ and 23\,\% less at $1024\times2$; albedo then steps at 2.72\,s per model day (87\,SYPD steady state), as fast as levante with the old binary, and OpenIFS becomes the limiter.
 \item With XIOS packed four servers per node and FESOM at $768\times2$, the model runs on 33 instead of 47 nodes at 2.86\,s per model day (83\,SYPD), 26\,\% fewer node-hours per simulated year; OpenIFS at $192\times8$ is slower than $384\times4$.
-\item XIOS servers are busy at most 41\,\%, so four servers per node are feasible.
+\item XIOS servers are busy at most 41\,\%. By memory, four fit on a node of their own, but only two next to OpenIFS ranks over a 10-year leg (44--46\,GB per server).
+\item Components can share nodes (esm-tools/esm\_tools\#1603): XIOS and the runoff mapper on the OpenIFS nodes free four nodes at unchanged speed.
+\item FESOM runs fastest single-threaded with idle cores next to its ranks: the same 768 ranks compute 135\,s per 2 months at 64 per node, 155 to 158\,s at 96 and 228 to 238\,s at 128. The busy cores run at 2.84, 2.55 and 2.33\,GHz; DRAM traffic of 40 to 70\,GB/s per node is far below what a node delivers.
+\item OpenIFS at TCO95 gains nothing from its third and fourth thread (two threads on four reserved cores compute as fast), and $768\times2$ packed is 13\,\% slower than $384\times4$.
+\item Production layout: 25 nodes step 2.40\,s per model day, about 99\,SYPD in steady state and 6.1 node-hours per model year (19.8 in the first albedo legs). OpenIFS and FESOM now share the critical path: OpenIFS 20\,\% faster alone would gain 8.5\,\%, an infinitely fast FESOM 7\,\%.
+\item After \#1097--\#1099 a rerun at a fixed FESOM thread count is bit-identical; a different thread count still changes the results from the first day.
 \end{itemize}
 Open:
 \begin{itemize}
@@ -299,6 +380,10 @@ Open:
 \item Whether FESOM's polling is halo latency, ice load imbalance or the ssh solver's reductions; the sampler records no call stacks. A FESOM rank-count scan (fewer ranks, same layout otherwise) would show how far 1792 ranks are past FESOM's scaling limit.
 \item Why EVP on rank 1791 is 2.8 times slower on albedo; first rerun with the same FESOM binary on both machines.
 \item Cheaper output-mean accumulation in \texttt{io\_meandata}, and a partition weighted for sea ice.
+\item Which code makes the coupled FESOM depend on its thread count; the standalone CI configuration does not.
+\item A FESOM partition cut for 96 ranks per node ($n\_part = 8, 96$) instead of \texttt{dist\_768}'s ($12, 64$); it needs its own reordered OASIS set.
+\item Speed and XIOS memory of the 25-node layout over a full 10-year leg.
+\item OpenIFS's radiation steps and its daily output step now set the pace; the radiation frequency and the FullPos output are the levers on the OpenIFS side.
 \end{itemize}
 
 \section{Falsified claims (kept, struck through)}\label{sec:falsified}
@@ -309,7 +394,7 @@ Open:
 \item \dead{FESOM computes only 84\,\% of the time and has slack, so its cores can be reduced.} The 84\,\% omitted FESOM's output and diagnostics categories; LUCIA shows FESOM computing 91\,\% and waiting 9\,\%.
 \item \dead{OpenIFS computes 83\,\% of the time and both models are saturated.} The \texttt{ifs.stat} CPU column includes MPI busy-waiting; LUCIA shows OpenIFS waiting 57\,\% of the time for FESOM.
 \item \dead{The initialisation is five times slower than on levante as a property of albedo.} The same files read in 22\,s in TEST\_perfA and FESOM setup ranged from 14 to 335\,s in identical configurations; it varies from job to job.
-\item \dead{Give the freed XIOS nodes to OpenIFS, 384 to 768 tasks.} OpenIFS scaling and stability end at about four times the truncation, 380 tasks for TCO95.
+\item \dead{Give the freed XIOS nodes to OpenIFS, 384 to 768 tasks.} OpenIFS scaling and stability end at about four times the truncation, 380 tasks for TCO95; measured, $768\times2$ on the same nodes computes 13\,\% longer than $384\times4$ (oifs768).
 \item \dead{Tidy and file movement make the short legs slow.} Tidy is threaded and takes 20\,s; initialisation takes 5.5\,min.
 \item \dead{A precision difference between the machines.} OpenIFS is single precision on both (``The model is using single precision'').
 \item \dead{Different FESOM build or namelists.} Namelists are identical and albedo's build targets AVX2 while levante's is generic.
@@ -318,6 +403,9 @@ Open:
 \item \dead{Kernel mitigations make intra-node exchange slow through system calls in CMA/knem.} Transports without system calls (posix, sysv, vader) are as slow or slower than the default.
 \item \dead{Albedo's cores are 1.5 to 1.8 times slower on cache-resident code.} Measured 16\,\%.
 \item \dead{A GCC build or missing optimisation flags (FESOM PR \#685).} Both machines build with Intel ifort; albedo has more aggressive flags than levante.
+\item \dead{FESOM on albedo is limited by memory bandwidth, so spreading its ranks helps by giving each rank more bandwidth.} Hardware counters show 40 to 70\,GB/s of DRAM traffic per node in every layout, far below the node's bandwidth; spread ranks win through clock (2.84 against 2.33\,GHz) and instructions per cycle (1.90 against 1.71).
+\item \dead{Removing the OpenMP locks (\#1097--\#1099) makes the coupled model independent of the FESOM thread count.} Reruns become bit-identical, but $768\times2$ and $768\times1$ on the same cores still differ from day 1 (nolockB1, nolockB4).
+\item \dead{The lock-free gathers reproduce the old scatter bit for bit at one thread.} The summation order per node is the same by construction, but perfI and nolockI ($1792\times1$, old and new build) differ from day 1 in the coupled model; compiler contraction of multiply-adds is one possible cause, not yet checked.
 \end{itemize}
 
 \section{Method notes}
@@ -332,15 +420,23 @@ Open:
 \item Standalone runs that set \texttt{--cpu\_bind=none} with several OpenMP threads per rank and no \texttt{taskset} leave ranks and threads unpinned; the FESOM 2.8 release tests on 18 nodes collapsed that way (ssh solver 40 to 77 times slower than on one pinned node).
 \item Profiling: on levante the sampler's timer signals during start-up broke XIOS's collective \texttt{nc\_create\_par} for the interpolation weights (``Permission denied'' on all FESOM ranks, job 27761837); \texttt{PCS\_DELAY=60} starts the timer after the files are written. \texttt{PCS\_ENABLE=1} and \texttt{LD\_PRELOAD=libpcsampler.so} on selected ranks; \texttt{pcs\_report.py <base> [top] [t0 t1]} restricts to an epoch window. Symbols of stripped libraries (UCX) are only the nearest exported name.
 \item Benchmark: \texttt{bench/mpibench.c}; job scripts \texttt{bench/bench\_*.slurm}; the \texttt{HALO\_BYTES} variable sets the halo message size.
+\item Seconds per model day: \texttt{bench/ifsstat\_days.awk} on \texttt{ifs.stat}; steady state is the mean of days 2 to 58, since day 1 carries the OpenIFS cold start and the last day the restart writing.
+\item Per coupling interval: \texttt{bench/lucia\_steps.py timeline\_OpenIFS.nc timeline\_fesom.nc}; the critical path is the sum over intervals of the longer component.
+\item Hardware counters: \texttt{bench/pmcwin.c}, built with \texttt{gcc -O2}, attached by \texttt{bin/pmcmon.sh}, which the wrapper \texttt{bin/pmcwrap.sh} (arguments: thread count, program) starts once per node; summarised by \texttt{bench/pmc\_summary.py} with the work directory as argument. User mode only, so MPI polling in the kernel is not counted but polling in user space is.
+\item Fewer threads than reserved cores: set \texttt{omp\_num\_threads} to the cores to reserve and start the program through a wrapper that exports a lower \texttt{OMP\_NUM\_THREADS} (through FESOM's \texttt{execution\_command}, because \texttt{bin\_in\_work} names the staged binary after \texttt{executable}). With \texttt{ranks\_per\_node} the wrapper is no longer needed for FESOM.
+\item Bit-comparison of runs: daily FESOM SST, sea-ice concentration and velocity and SSH, compared day by day with \texttt{numpy.array\_equal}.
 \end{itemize}
 
 \section{Assets}
 \begin{itemize}
-\item Runtime: \texttt{/albedo/work/projects/p\_awiesm3\_cmip7/runtime/awiesm3-v3.4/}, experiments PICAL\_ccnice, PICAL\_crunveg, TEST\_xiosbus, TEST\_perfA--H, TEST\_prof, TEST\_xios1d; failed attempts kept as \texttt{*\_rc\_failed}, \texttt{*\_knobfail}, \texttt{*\_vtune\_ptrace}.
-\item Benchmarks and profiler: \texttt{esm\_tools/albedo\_performance\_report/bench/}; levante copies in \texttt{/scratch/a/a270092/lr\_probe/}.
-\item Profiling wrapper and sampler: \texttt{model\_codes/awiesm3-develop/bin/fesom\_prof.sh}, \texttt{libpcsampler.so}.
-\item Runscripts: \texttt{esm\_tools/runscripts/awiesm3/develop/awiesm3-develop-albedo-TCO95L91-CORE3\_*.yaml}.
-\item Levante reference: \texttt{/work/bb1469/a270092/runtime/awiesm3-v3.4/PICAL\_ccnice/}.
+\item Runtime: \url{/albedo/work/projects/p_awiesm3_cmip7/runtime/awiesm3-v3.4/}, experiments PICAL\_ccnice, PICAL\_crunveg, TEST\_xiosbus, TEST\_perfA--N, TEST\_placeA/B, TEST\_mevp*, TEST\_nolock*, TEST\_pmc*, TEST\_oifs768, TEST\_fes96*, TEST\_prodlayout, TEST\_best25, TEST\_prof, TEST\_xios1d; failed attempts kept as \texttt{*\_rc\_failed}, \texttt{*\_knobfail}, \texttt{*\_vtune\_ptrace}.
+\item Benchmarks, profiler, counter and LUCIA tools, figure script: \texttt{bench/} in this repository, \url{https://github.com/JanStreffing/investigation_awiesm3_albedo_performance}; levante copies in \url{/scratch/a/a270092/lr_probe/}.
+\item Wrappers in \url{/albedo/work/user/jstreffi/model_codes/awiesm3-develop/bin/}: \texttt{fesom\_prof.sh}, \texttt{libpcsampler.so}, \texttt{fesom\_omp1.sh}, \texttt{pmcwrap.sh}, \texttt{pmcmon.sh}, \texttt{pmcwin}.
+\item FESOM builds in \url{/albedo/work/user/jstreffi/model_codes/awiesm3-develop/fesom-bin/}: \texttt{main1060\_1ef85546} and \texttt{main1060\_53e095ec} (production, libfesom.so md5 18087062).
+\item Partitions \texttt{dist\_384}, \texttt{dist\_768}, \texttt{dist\_1024} in \url{/albedo/work/projects/p_awiesm3_cmip7/input/fesom2/core3/}; reordered OASIS sets in \url{/albedo/work/projects/p_awiesm3_cmip7/input/oasis3mct_reorder/}.
+\item esm\_tools placement: \url{src/esm_runscripts/placement.py} on branch \url{feat/awiesm3-v3.4-co2} (322f0ed1f) and esm-tools/esm\_tools\#1603.
+\item Runscripts: \url{esm_tools/runscripts/awiesm3/develop/awiesm3-develop-albedo-TCO95L91-CORE3_*.yaml} (not committed).
+\item Levante reference: \url{/work/bb1469/a270092/runtime/awiesm3-v3.4/PICAL_ccnice/}.
 \end{itemize}
 
 \end{document}
