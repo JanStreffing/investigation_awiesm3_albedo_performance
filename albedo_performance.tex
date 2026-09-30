@@ -429,11 +429,11 @@ Open:
 
 \section{Assets}
 \begin{itemize}
-\item Runtime: \url{/albedo/work/projects/p_awiesm3_cmip7/runtime/awiesm3-v3.4/}, experiments PICAL\_ccnice, PICAL\_crunveg, TEST\_xiosbus, TEST\_perfA--N, TEST\_placeA/B, TEST\_mevp*, TEST\_nolock*, TEST\_pmc*, TEST\_oifs768, TEST\_fes96*, TEST\_prodlayout, TEST\_best25, TEST\_prof, TEST\_xios1d; failed attempts kept as \texttt{*\_rc\_failed}, \texttt{*\_knobfail}, \texttt{*\_vtune\_ptrace}.
+\item Runtime: \url{/albedo/work/projects/p_awiesm3_cmip7/jstreffi/runtime/awiesm3-v3.4/}, experiments PICAL\_ccnice, PICAL\_crunveg, TEST\_xiosbus, TEST\_perfA--N, TEST\_placeA/B, TEST\_mevp*, TEST\_nolock*, TEST\_pmc*, TEST\_oifs768, TEST\_fes96*, TEST\_prodlayout, TEST\_best25, TEST\_prof, TEST\_xios1d; failed attempts kept as \texttt{*\_rc\_failed}, \texttt{*\_knobfail}, \texttt{*\_vtune\_ptrace}.
 \item Benchmarks, profiler, counter and LUCIA tools, figure script: \texttt{bench/} in this repository, \url{https://github.com/JanStreffing/investigation_awiesm3_albedo_performance}; levante copies in \url{/scratch/a/a270092/lr_probe/}.
 \item Wrappers in \url{/albedo/work/user/jstreffi/model_codes/awiesm3-develop/bin/}: \texttt{fesom\_prof.sh}, \texttt{libpcsampler.so}, \texttt{fesom\_omp1.sh}, \texttt{pmcwrap.sh}, \texttt{pmcmon.sh}, \texttt{pmcwin}.
 \item FESOM builds in \url{/albedo/work/user/jstreffi/model_codes/awiesm3-develop/fesom-bin/}: \texttt{main1060\_1ef85546} and \texttt{main1060\_53e095ec} (production, libfesom.so md5 18087062).
-\item Partitions \texttt{dist\_384}, \texttt{dist\_768}, \texttt{dist\_1024} in \url{/albedo/work/projects/p_awiesm3_cmip7/input/fesom2/core3/}; reordered OASIS sets in \url{/albedo/work/projects/p_awiesm3_cmip7/input/oasis3mct_reorder/}.
+\item Partitions \texttt{dist\_384}, \texttt{dist\_768}, \texttt{dist\_1024} in \url{/albedo/work/projects/p_awiesm3_cmip7/jstreffi/input/fesom2/core3/}; reordered OASIS sets in \url{/albedo/work/projects/p_awiesm3_cmip7/jstreffi/input/oasis3mct_reorder/}.
 \item esm\_tools placement: \url{src/esm_runscripts/placement.py} on branch \url{feat/awiesm3-v3.4-co2} (322f0ed1f) and esm-tools/esm\_tools\#1603.
 \item Runscripts: \url{esm_tools/runscripts/awiesm3/develop/awiesm3-develop-albedo-TCO95L91-CORE3_*.yaml} (not committed).
 \item Levante reference: \url{/work/bb1469/a270092/runtime/awiesm3-v3.4/PICAL_ccnice/}.

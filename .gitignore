@@ -10,3 +10,4 @@
 bench/mpibench_albedo
 bench/pmcwin
 __pycache__/
+.eval_tmp/

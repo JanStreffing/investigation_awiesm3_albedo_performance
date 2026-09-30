@@ -16,7 +16,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.dirname(HERE)
-RUN = "/albedo/work/projects/p_awiesm3_cmip7/runtime/awiesm3-v3.4"
+RUN = "/albedo/work/projects/p_awiesm3_cmip7/jstreffi/runtime/awiesm3-v3.4"
 
 SURFACE = "#fcfcfb"
 INK = "#0b0b0b"
