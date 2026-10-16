@@ -3,15 +3,15 @@
 \usepackage{graphicx,booktabs,float,xcolor,hyperref,xurl}
 \usepackage[normalem]{ulem}
 \newcommand{\dead}[1]{\textcolor{gray}{\sout{#1}}}
-\title{AWI-ESM3 on albedo: why the coupled runs are slow}
+\title{AWI-ESM3 on albedo: why the coupled runs are slow, and how to make them fast}
 \author{Jan Streffing}
-\date{Last updated: 2026-09-29}
+\date{Last updated: 2026-10-16}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-The AWI-ESM3 CMIP7 spin-up (TCO95L91 OpenIFS, CORE3 FESOM2 with cavities, LPJ-GUESS, XIOS, 47 nodes) moved from levante to albedo on 2026-09-26 and ran there at 49 to 57\,SYPD, against 83\,SYPD on levante. This report follows why, and how the layout was changed until the model ran faster on fewer nodes. Where we are (2026-09-29): 25 nodes step 2.40\,s per model day (about 99\,SYPD in steady state, 6.1 node-hours per model year against 19.8 in the first albedo legs), with FESOM at 1800\,s and without OpenMP threads, its 768 ranks spread 96 per node, XIOS and the runoff mapper on the OpenIFS nodes, and OpenIFS and FESOM now sharing the critical path. The steps are in Section~\ref{sec:timeline}, the current state and open questions in Section~\ref{sec:state}, falsified explanations in Section~\ref{sec:falsified}.
+The AWI-ESM3 CMIP7 spin-up (TCO95L91 OpenIFS, CORE3 FESOM2 with cavities, LPJ-GUESS, XIOS, 47 nodes) moved from levante to albedo on 2026-09-26 and ran there at 49 to 57\,SYPD, against 83\,SYPD on levante. This report follows why, and how the layout was changed until the model ran faster on fewer nodes. Where we are (2026-09-29): 25 nodes step 2.40\,s per model day (about 99\,SYPD in steady state, 6.1 node-hours per model year against 19.8 in the first albedo legs), with FESOM at 1800\,s and without OpenMP threads, its 768 ranks spread 96 per node, XIOS and the runoff mapper on the OpenIFS nodes, and OpenIFS and FESOM now sharing the critical path. With the carbon cycle (REcoM, 33 FESOM tracers) the same layout is 6.8 times slower; there FESOM's rank count is the lever, and 2688 FESOM ranks on 36 nodes run at 46 to 52\,SYPD for 16.6 to 18.8 node-hours per model year, against 14.6\,SYPD and 41.2 on 25 nodes. The steps are in Section~\ref{sec:timeline}, the current state and open questions in Section~\ref{sec:state}, falsified explanations in Section~\ref{sec:falsified}.
 \end{abstract}
 
 \section{The campaign, in the order it happened}\label{sec:timeline}
@@ -342,9 +342,102 @@ The largest XIOS server grows to 44--46\,GB in a 10-year leg. Four next to 28 Op
 \end{figure}
 Both production runscripts (PICAL\_ccnice from leg 2130, PICAL\_crunveg from leg 2120) now use this layout with the 53e095ec build, OpenIFS unchanged at $384\times4$. Their frozen esm\_tools virtual environments (6de9ed453, without the placement module) were moved aside, so the next submission rebuilds them from \texttt{feat/awiesm3-v3.4-co2} at 322f0ed1f. They have not been resubmitted yet.
 
-\section{State of the albedo performance (2026-09-29)}\label{sec:state}
-Proven:
+\subsection{A layout for the 1200\,s time step (2026-09-30)}
+The Labrador Sea stopped convecting after the switch to the 1800\,s FESOM step, so a decade at 1200\,s was prepared to separate the time step from the FESOM build. At 1200\,s FESOM computes 1.37 to 1.39 times as long per model day (perfE/G against perfF/H), and 1024 instead of 768 ranks at equal density cut that by a factor 0.895 (perfJ against perfM). From the 2-month LUCIA timelines this gives FESOM about 215\,s per two months at $768$ ranks, 96 per node (25 nodes), 189\,s at 64 per node (29 nodes), 193\,s at $1024$ ranks, 96 per node (28 nodes) and 169\,s at 64 per node (33 nodes), against OpenIFS's 166 to 177\,s. The last one balances the two. Measured over full 10-year legs:
+\begin{table}[H]\centering\footnotesize
+\begin{tabular}{lllrrr}\toprule
+experiment & build & FESOM step, layout & nodes & per decade & s per day\\\midrule
+ts1200 & new & 1200\,s, $1024\times1$, 64 per node & 33 & 2\,h\,46\,min & 2.72\\
+ob1200 & old & 1200\,s, $1024\times1$, 64 per node & 33 & 3\,h\,19\,min & 3.26\\
+ob1800 & old & 1800\,s, $768\times1$, 96 per node & 25 & 3\,h\,12\,min & 3.15\\\bottomrule
+\end{tabular}
+\caption{Whole 10-year legs of PICAL\_crunveg\_ts1200, \_ob1200 and \_ob1800, including start-up and restart writing; new build icehf, old build leadclose. The new build at 1200\,s on 33 nodes runs a decade in the estimated 2\,h\,45\,min (about 87\,SYPD, 9.1 node-hours per model year). The old build is 20\,\% slower in the same layout.}\label{tab:ts1200}
+\end{table}
+
+\subsection{REcoM: FESOM becomes 6.8 times more expensive (2026-10-03)}
+PICAL\_cc continues the tuned physics run with the carbon cycle switched on (awiesm3 \texttt{develop-cc}: REcoM 2p3z2d, 33 FESOM tracers instead of 2, concentration-driven CO\textsubscript{2}). Its first leg (2140--2144) ran in the 25-node physics layout and took 8\,h\,20\,min for five years: 16.2\,s per model day, 14.6\,SYPD and 41.2 node-hours per model year, 6.8 times the 2.40\,s of the physics-only run. FESOM's own timers for a model month in that layout (TEST\_ccA): 555\,s in total, of which 364\,s (66\,\%) is the tracer step (advection and diffusion of 33 tracers), 39\,s the REcoM biology, 30\,s output and 24\,s sea ice. OpenIFS needs about 2.4\,s per model day in this layout (physics-only run), so it spends most of the 16.2\,s waiting for FESOM.
+
+All REcoM tests below are one model month from the same 2140-01-01 start (FESOM physics restart, REcoM from climatology, OpenIFS from initial conditions) unless marked warm, on the 1800\,s step. Speed is the mean of model days 2 to 30 from \texttt{ifs.stat}; tools and the full table are in \texttt{cc\_perf/}.
+
+\subsection{REcoM: FESOM rank count, packing and threads (2026-10-03)}
+With REcoM the rank count is the lever, much more than for the physics. With OpenIFS $384\times4$ and the other components as in production:
+\begin{table}[H]\centering\footnotesize
+\begin{tabular}{lrrrr}\toprule
+FESOM & nodes & s per model day & SYPD & node-hours per year\\\midrule
+$768\times1$, 128 per node & 23 & 22.24 & 10.6 & 51.9\\
+$768\times1$, 96 per node (production) & 25 & 16.24 & 14.6 & 41.2\\
+$768\times1$, 64 per node & 29 & 11.79 & 20.1 & 34.7\\
+$768\times2$ threads, 64 per node & 29 & 12.07 & 19.6 & 35.5\\
+$768\times1$, 32 per node & 41 & 8.59 & 27.5 & 35.7\\
+$768\times4$ threads, 32 per node & 41 & 9.93 & 23.8 & 41.3\\
+$512\times1$, 64 per node & 25 & 18.52 & 12.8 & 47.0\\
+$1024\times1$, 64 per node & 33 & 8.66 & 27.3 & 29.0\\
+$1792\times1$, 64 per node & 45 & 5.31 & 44.6 & 24.2\\
+$1792\times1$, 96 per node & 36 & 6.34 & 37.3 & 23.2\\
+$1792\times1$, 128 per node & 31 & 10.21 & 23.2 & 32.1\\
+$2688\times1$, 64 per node & 56 & 3.93 & 60.2 & 22.3\\
+$2688\times1$, 96 per node & 42 & 4.59 & 51.5 & 19.6\\
+$3584\times1$, 96 per node & 52 & 3.97 & 59.6 & 20.9\\\bottomrule
+\end{tabular}
+\caption{FESOM layouts with REcoM. LPJ-GUESS is $64\times8$ in the 768- and 512-rank rows and in 1024 and 1792 at 64 per node, $64\times2$ (one node instead of four, see below) in the others.}\label{tab:recom_fesom}
+\end{table}
 \begin{itemize}
+\item Packing 128 ranks per node is worst (22.2\,s at 768 ranks against 16.2 at 96 per node and 11.8 at 64 per node), and the tracer step scales with the ranks per node: 514, 364 and 247\,s per model month at 128, 96 and 64 per node. The clock difference measured for the physics (2.33 against 2.84\,GHz, 22\,\%) explains only a small part of that factor of 2.1; the counters were not run on the REcoM tests.
+\item OpenMP does not pay with REcoM either: the idle cores used as threads (768 ranks with 2 threads at 64 per node, 4 threads at 32 per node) are 3 and 16\,\% slower than leaving them empty. REcoM's own code has no OpenMP directives.
+\item More ranks are faster and cheaper together up to 2688: at 64 per node 512, 768, 1024, 1792 and 2688 ranks take 18.5, 11.8, 8.7, 5.3 and 3.9\,s per model day. The tracer step goes from 247 (768) to 98 (1792) and 70\,s (2688) per model month. Beyond that it flattens: 3584 ranks at 96 per node (52 nodes) are as fast as 2688 at 64 per node (56 nodes). What does not shrink is sea ice (21 to 24\,s per month at every rank count), the ssh solver (6 to 7\,s) and the wait for the coupling fields.
+\item 96 per node is the cheapest density per model year at every rank count tested.
+\end{itemize}
+The partitions \texttt{dist\_2688} ($21\times128$) and \texttt{dist\_3584} ($28\times128$) were cut for these tests with FESOM's \texttt{fesom\_meshpart}, and the OASIS start set was reordered from the 768 order to 384, 512, 1024, 1792, 2688 and 3584 ranks (\texttt{cc\_perf/reorder\_cc.sh}, order checked against \texttt{nod2d.out} with \texttt{cc\_perf/check\_order.py}).
+
+\begin{figure}[H]\centering
+\includegraphics[width=\textwidth]{fig_recom_sypd_cost.png}
+\caption{Speed against cost for every REcoM layout tested. Colour is the number of FESOM ranks per group, shape how the cores are used (circles one thread, squares OpenMP threads, triangles tracer groups), a black rim a warm continuation from 2145. Points move up and to the left with the rank count alone; threads and groups always sit to the right of plain ranks at the same speed. Production is at the bottom right, the layout chosen for the continuation is the orange point at 16.6 node-hours per year and its continuation test from the 2145 restarts the black-rimmed one at 18.8; the 42-node layout that keeps OpenIFS at $384\times4$ is the black-rimmed orange point at 19.6.}\label{fig:recom_cost}
+\end{figure}
+
+\subsection{REcoM: OpenIFS and LPJ-GUESS can shrink, OpenIFS's restart cannot (2026-10-03)}
+With FESOM this slow, OpenIFS and LPJ-GUESS are oversized. At $768\times1$ (64 per node) OpenIFS $192\times4$ with three XIOS servers per OpenIFS node (11.69\,s per model day), $128\times4$ with four (11.76) and LPJ-GUESS $64\times2$ on one node instead of $64\times8$ on four (11.72) are all as fast as the full set (11.79). At 1792 and 2688 ranks OpenIFS $192\times4$ is still not on the critical path (6.34 and 4.55\,s per model day at 96 per node). XIOS peaked at 43.6\,GB per server over the five-year PICAL\_cc leg, so three servers per node fit next to OpenIFS for five-year legs and four do not.
+
+OpenIFS writes one restart file per MPI task (\texttt{*.N\_384}), and a run with $384\times2$ from PICAL\_cc's $384\times4$ restart aborted reading it (\texttt{DDHRCV: WRONG LENGTH}, TEST\_ccR1), so neither its rank count nor its thread count can change in a continuation. LPJ-GUESS's state is one file per rank too, but a change of its thread count restarted cleanly. Its state exists only at year boundaries, so a continuation test has to start on 1 January (a February restart crashed in the state reader).
+
+Warm continuations from PICAL\_cc's 2145-01-01 restarts (FESOM physics and REcoM, LPJ-GUESS, OpenIFS $384\times4$, coupler files reordered to the new partition) run as fast as the cold tests: 6.34\,s per model day at 1792 ranks (TEST\_ccR5, against 6.34 cold) and 4.59 at 2688 ranks (TEST\_ccR4, against 4.59 cold). Two warm runs were 11\,\% slower (TEST\_ccR2 7.07 at 1792 ranks, TEST\_ccR3 18.03 at 768): their tracer step by 13\,\%, REcoM by 20 to 29\,\% and the sea-ice EVP by 20 to 24\,\%. The identical TEST\_ccR5 was not, so this is the node set the job landed on, not the warm start.
+
+\subsection{REcoM: tracer groups with XIOS output (2026-10-03)}
+FESOM can split its tracers between several groups of ranks (\texttt{num\_fesom\_groups} in \texttt{\&run\_config}, \texttt{fesom.mpi\_num\_groups} in esm\_tools; each group runs the whole dynamics and a share of the tracers and broadcasts its tracers to the other groups). With the albedo build both group tests hung at start-up, group 0 inside \texttt{xios\_initialize}. The colleague's group runs on levante write FESOM output without XIOS (\texttt{with\_xios: false}), which is not an option here. The cause is in OASIS's group support:
+\begin{itemize}
+\item The root rank of each model is the maximum over all tasks that are the root of their local communicator. With groups every group's first task qualifies, so OASIS reported the last group's root (rank 768) as FESOM's root. Only group 0 initialises XIOS, so the XIOS server waited on group 1's root and group 0 on the server.
+\item \texttt{oasis\_enddef} starts with a split of the global coupling communicator, which includes the groups above 0, but only group 0 calls \texttt{oasis\_enddef}.
+\end{itemize}
+The colleague's OASIS checkout on levante has an equivalent fix as uncommitted changes (it narrows the global communicator per group and needs every component rebuilt). For the tests a smaller one went into a separate build tree (\url{/albedo/work/user/jstreffi/model_codes/awiesm3-develop-cc-grp/}): only group 0's root counts as the model root, and groups above 0 join the split with \texttt{MPI\_UNDEFINED} through a new \texttt{oasis\_enddef\_inactive\_group}, called by FESOM; only FESOM is relinked. Groups then run with XIOS output, but never beat plain ranks on the same nodes:
+\begin{table}[H]\centering\footnotesize
+\begin{tabular}{lrrr@{\hspace{2em}}lrr}\toprule
+groups & nodes & s per day & SYPD & one group on similar nodes & nodes & s per day\\\midrule
+$2\times768$, 96 per node & 30 & 10.76 & 22.0 & $1024\times1$, 64 per node & 33 & 8.66\\
+$2\times1792$, 128 per node & 42 & 8.93 & 26.5 & $2688\times1$, 96 per node & 42 & 4.59\\
+$2\times1792$, 96 per node & 52 & 5.28 & 44.8 & $3584\times1$, 96 per node & 52 & 3.97\\
+$3\times1792$, 96 per node & 70 & 4.66 & 50.8 & $2688\times1$, 64 per node & 56 & 3.93\\
+$2\times2688$, 96 per node & 70 & 3.86 & 61.3 & $3584\times1$, 96 per node & 52 & 3.97\\\bottomrule
+\end{tabular}
+\caption{Tracer groups against a single group of ranks. Groups do split the tracer step (120 to 77\,s per model month from one to two groups of 1792), but each group repeats the dynamics, sea ice and output, which more ranks would have divided. Start-up took 10 to 15\,min at 5000 to 5800 tasks.}\label{tab:groups}
+\end{table}
+
+\subsection{REcoM: the layout for the continuation (2026-10-03)}
+The layout chosen for continuing PICAL\_cc from 2145 uses 36 nodes: FESOM $2688\times1$ at 96 per node, OpenIFS $192\times4$ from initial conditions (its 384-rank restart cannot be read), three XIOS servers and the runoff mapper on the OpenIFS nodes, LPJ-GUESS $64\times2$, five-year legs of about 2.5\,h. The cold test of this layout ran at 4.55\,s per model day (52.0\,SYPD, 16.6 node-hours per model year, 2.5 times cheaper than the first leg); the continuation test from the 2145 restarts (TEST\_ccP1) ran cleanly at 5.14\,s (46.0\,SYPD), with the tracer step 16\,\% slower and sea ice unchanged, the node-set scatter above. Keeping OpenIFS at $384\times4$ would continue the atmosphere too, at 42 nodes and 19.6 node-hours per model year. The runscript is drafted (\texttt{awiesm3-develop-cc-albedo-TCO95L91-CORE3\_PICAL\_cc\_36node\_DRAFT.yaml}) as a new experiment branched from PICAL\_cc, because esm\_tools would otherwise resume OpenIFS from the 384-rank restart; it has not been submitted.
+
+The job account is chosen per leg in the runscript rather than in esm\_tools: \texttt{account: !ENV \$\{ESM\_ACCOUNT\}}, with \texttt{pre\_run\_commands} exporting the account with the highest fairshare from \texttt{sshare}, so each leg's job picks again before it submits the next leg. Fairshare is the only priority term that differs between one user's accounts; the REcoM tests alone moved one account from 0.88 to 0.76.
+
+\section{State of the albedo performance (2026-10-16)}\label{sec:state}
+Proven, with REcoM (develop-cc, 33 tracers):
+\begin{itemize}
+\item With REcoM FESOM is 6.8 times as expensive: the 25-node physics layout steps 16.2\,s per model day (14.6\,SYPD, 41.2 node-hours per model year); the tracer step is 66\,\% of FESOM's time.
+\item FESOM's rank count is the lever: at 96 per node 768, 1792, 2688 and 3584 ranks give 16.2, 6.3, 4.6 and 4.0\,s per model day on 25, 36, 42 and 52 nodes. 96 per node is the cheapest density, 128 per node the slowest.
+\item OpenMP threads and tracer groups are slower than plain ranks on the same nodes; groups need an OASIS fix to run with FESOM's XIOS output.
+\item OpenIFS $192\times4$ and LPJ-GUESS $64\times2$ keep up with FESOM; OpenIFS's restart is tied to both its rank and thread count.
+\item Chosen continuation layout: 36 nodes, 4.55 to 5.14\,s per model day (46 to 52\,SYPD), 16.6 to 18.8 node-hours per model year.
+\item Identical one-month jobs differ by up to 11\,\% in speed, depending on the nodes.
+\end{itemize}
+Proven, physics only (to 2026-09-30):
+\begin{itemize}
+\item At 1200\,s, FESOM $1024\times1$ at 64 per node on 33 nodes runs a decade in 2\,h\,46\,min (2.72\,s per model day including start-up and restarts).
 \item Albedo runs the same configuration 1.49 times slower than levante (15483 against 10385\,s per 10-year leg).
 \item Albedo's cores are 16\,\% slower on cache-resident work; memory bandwidth per core is within 4\,\%.
 \item Compute-bound parts are 17 to 29\,\% slower, consistent with the slower cores.
@@ -384,6 +477,10 @@ Open:
 \item A FESOM partition cut for 96 ranks per node ($n\_part = 8, 96$) instead of \texttt{dist\_768}'s ($12, 64$); it needs its own reordered OASIS set.
 \item Speed and XIOS memory of the 25-node layout over a full 10-year leg.
 \item OpenIFS's radiation steps and its daily output step now set the pace; the radiation frequency and the FullPos output are the levers on the OpenIFS side.
+\item REcoM: why the tracer step slows so much with dense packing (514 against 247\,s per month at 128 and 64 per node); the counters were not run on these tests.
+\item REcoM: which nodes make a job 11 to 13\,\% slower, and whether excluding them is worth it.
+\item REcoM: XIOS memory over a 10-year leg with three servers per node; five-year legs are used until it is known.
+\item The OASIS group fix: the colleague's version (all components rebuilt) or the test-tree version (FESOM relinked) would have to be committed before groups are used anywhere; at present groups have no layout where they pay.
 \end{itemize}
 
 \section{Falsified claims (kept, struck through)}\label{sec:falsified}
@@ -405,6 +502,8 @@ Open:
 \item \dead{A GCC build or missing optimisation flags (FESOM PR \#685).} Both machines build with Intel ifort; albedo has more aggressive flags than levante.
 \item \dead{FESOM on albedo is limited by memory bandwidth, so spreading its ranks helps by giving each rank more bandwidth.} Hardware counters show 40 to 70\,GB/s of DRAM traffic per node in every layout, far below the node's bandwidth; spread ranks win through clock (2.84 against 2.33\,GHz) and instructions per cycle (1.90 against 1.71).
 \item \dead{Removing the OpenMP locks (\#1097--\#1099) makes the coupled model independent of the FESOM thread count.} Reruns become bit-identical, but $768\times2$ and $768\times1$ on the same cores still differ from day 1 (nolockB1, nolockB4).
+\item \dead{FESOM's tracer groups cannot be used with FESOM's XIOS output.} They hung in the albedo build, but because of OASIS's choice of the model root and its \texttt{oasis\_enddef} split; with those fixed they run with XIOS output (TEST\_ccG1--G5).
+\item \dead{A warm REcoM continuation is about 11\,\% slower than a cold start.} Seen in TEST\_ccR2 and R3; the identical TEST\_ccR5 and the 2688-rank TEST\_ccR4 ran exactly as fast as their cold counterparts. Node-set scatter.
 \item \dead{The lock-free gathers reproduce the old scatter bit for bit at one thread.} The summation order per node is the same by construction, but perfI and nolockI ($1792\times1$, old and new build) differ from day 1 in the coupled model; compiler contraction of multiply-adds is one possible cause, not yet checked.
 \end{itemize}
 
@@ -437,6 +536,9 @@ Open:
 \item esm\_tools placement: \url{src/esm_runscripts/placement.py} on branch \url{feat/awiesm3-v3.4-co2} (322f0ed1f) and esm-tools/esm\_tools\#1603.
 \item Runscripts: \url{esm_tools/runscripts/awiesm3/develop/awiesm3-develop-albedo-TCO95L91-CORE3_*.yaml} (not committed).
 \item Levante reference: \url{/work/bb1469/a270092/runtime/awiesm3-v3.4/PICAL_ccnice/}.
+\item REcoM tests: \texttt{cc\_perf/} in this repository: \texttt{make\_cc\_test.py} (one-month test runscripts from the PICAL\_cc runscript), \texttt{cc\_eval.sh} (speed and FESOM timers per test), \texttt{results\_20261003.txt} (all tests), \texttt{plot\_sypd\_cost.py} (Figure~\ref{fig:recom_cost}), \texttt{reorder\_cc.sh} and \texttt{check\_order.py} (OASIS sets per partition). Experiments TEST\_ccA--Z4, TEST\_ccR1--R5, TEST\_ccG1--G5, TEST\_ccP1 in the runtime directory (logs and output; the run folders have been removed).
+\item REcoM partitions \texttt{dist\_2688}, \texttt{dist\_3584} next to the others; OASIS sets \url{/albedo/work/projects/p_awiesm3_cmip7/jstreffi/input/oasis_ini/cc_from_gmhemi1800_2139_dist*/} (2140 start) and \texttt{cc\_PICAL\_cc\_21441231\_dist\{1792,2688\}/} (2145 continuation).
+\item Tracer-group build with the OASIS fix: \url{/albedo/work/user/jstreffi/model_codes/awiesm3-develop-cc-grp/} (not committed).
 \end{itemize}
 
 \end{document}

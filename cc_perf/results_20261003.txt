@@ -1,0 +1,39 @@
+test   nodes state        s/day   SYPD  nodeh/y | fes_tot  tracer   recom  output     ice | layout
+ccA       25 COMPLETED    16.24  14.57     41.2 |     0.0     0.0     0.0     0.0     0.0 | fesom_nproc=768 fesom_omp=1 fesom_rpn=96 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccB       23 COMPLETED    22.24  10.64     51.9 |   787.1   513.6    45.0    40.1    34.1 | fesom_nproc=768 fesom_omp=1 fesom_rpn=128 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccC       29 COMPLETED    11.79  20.06     34.7 |   417.3   247.4    36.7    20.6    23.4 | fesom_nproc=768 fesom_omp=1 fesom_rpn=64 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccD       29 COMPLETED    12.07  19.60     35.5 |   427.7   241.1    40.8    21.4    28.5 | fesom_nproc=768 fesom_omp=2 fesom_rpn=64 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccE       41 COMPLETED     9.93  23.82     41.3 |   360.6   182.7    37.0    12.3    32.6 | fesom_nproc=768 fesom_omp=4 fesom_rpn=32 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccH       33 COMPLETED    10.52  22.49     35.2 |   377.2   213.4    36.9    15.4    22.6 | fesom_nproc=768 fesom_omp=1 fesom_rpn=48 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccI       41 COMPLETED     8.59  27.54     35.7 |   319.9   172.7    30.4    11.7    23.8 | fesom_nproc=768 fesom_omp=1 fesom_rpn=32 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccL       25 COMPLETED    18.52  12.77     47.0 |   622.6   412.5    55.4    28.0    23.7 | fesom_nproc=512 fesom_omp=1 fesom_rpn=64 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccM       25 COMPLETED    19.14  12.36     48.5 |   697.7   425.2    39.9    31.5    41.5 | fesom_nproc=1024 fesom_omp=1 fesom_rpn=128 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccJ       33 COMPLETED     8.66  27.32     29.0 |   322.6   174.2    26.4    16.6    22.5 | fesom_nproc=1024 fesom_omp=1 fesom_rpn=64 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccK       45 COMPLETED     5.31  44.55     24.2 |   230.9    97.7    17.4    12.6    21.4 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=64 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccQ       36 COMPLETED     6.34  37.31     23.2 |   264.1   119.6    18.0    16.7    21.7 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=96 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccR       31 COMPLETED    10.21  23.17     32.1 |   443.8   199.4    22.7    20.5    39.7 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=128 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccU       52 COMPLETED     4.93  47.98     26.0 |   218.3    91.4    14.9     9.8    22.2 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=48 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccV       56 COMPLETED     3.93  60.19     22.3 |   200.7    69.5    11.9     7.9    22.7 | fesom_nproc=2688 fesom_omp=1 fesom_rpn=64 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccW       42 COMPLETED     4.59  51.54     19.6 |   223.1    80.6    13.3    11.0    22.8 | fesom_nproc=2688 fesom_omp=1 fesom_rpn=96 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccZ4      52 COMPLETED     3.97  59.58     20.9 |   231.5    63.4    10.5    15.6    24.8 | fesom_nproc=3584 fesom_omp=1 fesom_rpn=96 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccN       23 COMPLETED    11.69  20.24     27.3 |   415.4   246.6    34.4    20.7    23.6 | fesom_nproc=768 fesom_omp=1 fesom_rpn=64 fesom_groups=1 oifs_nproc=192 oifs_omp=4 xios_rpn=3
+ccO       21 COMPLETED    11.76  20.11     25.1 |   417.9   248.2    34.7    21.0    23.6 | fesom_nproc=768 fesom_omp=1 fesom_rpn=64 fesom_groups=1 oifs_nproc=128 oifs_omp=4 xios_rpn=4
+ccP       26 COMPLETED    11.72  20.18     30.9 |   416.1   247.2    34.8    20.6    23.9 | fesom_nproc=768 fesom_omp=1 fesom_rpn=64 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccS       36 COMPLETED     5.31  44.55     19.4 |   229.6    98.0    15.9    12.3    22.7 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=64 fesom_groups=1 oifs_nproc=192 oifs_omp=4 xios_rpn=3
+ccT       27 COMPLETED     6.34  37.31     17.4 |   263.9   120.0    17.6    16.5    22.4 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=96 fesom_groups=1 oifs_nproc=192 oifs_omp=4 xios_rpn=3
+ccX       25 COMPLETED     6.38  37.08     16.2 |   273.1   119.7    17.3    16.9    23.4 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=96 fesom_groups=1 oifs_nproc=128 oifs_omp=4 xios_rpn=4
+ccY       34 COMPLETED     5.28  44.80     18.2 |   231.4    97.8    15.7    13.1    23.0 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=64 fesom_groups=1 oifs_nproc=128 oifs_omp=4 xios_rpn=4
+ccZ1      36 COMPLETED     4.55  51.99     16.6 |   223.0    80.2    13.1    11.0    23.7 | fesom_nproc=2688 fesom_omp=1 fesom_rpn=96 fesom_groups=1 oifs_nproc=192 oifs_omp=4 xios_rpn=3
+ccZ2      52 COMPLETED     3.97  59.58     20.9 |   201.7    69.6    11.6     7.9    23.6 | fesom_nproc=2688 fesom_omp=1 fesom_rpn=64 fesom_groups=1 oifs_nproc=256 oifs_omp=4 xios_rpn=2
+ccZ3      50 COMPLETED     4.00  59.14     20.3 |   204.5    70.3    12.4     7.9    23.7 | fesom_nproc=2688 fesom_omp=1 fesom_rpn=64 fesom_groups=1 oifs_nproc=192 oifs_omp=4 xios_rpn=3
+ccR3      25 COMPLETED    18.03  13.12     45.7 |   612.3   399.2    50.5    30.0    28.3 | fesom_nproc=768 fesom_omp=1 fesom_rpn=96 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccR2      33 COMPLETED     7.07  33.46     23.7 |   286.3   135.4    21.6    16.7    22.1 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=96 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccR5      33 COMPLETED     6.34  37.31     21.2 |   264.0   119.9    17.2    16.6    21.7 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=96 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccR4      42 COMPLETED     4.59  51.54     19.6 |   225.5    80.6    13.4    11.1    23.2 | fesom_nproc=2688 fesom_omp=1 fesom_rpn=96 fesom_groups=1 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+test   nodes state        s/day   SYPD  nodeh/y | fes_tot  tracer   recom  output     ice | layout
+ccG1      30 COMPLETED    10.76  21.98     32.8 |   391.5   197.0    39.1    30.2    24.7 | fesom_nproc=768 fesom_omp=1 fesom_rpn=96 fesom_groups=2 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccG2      52 COMPLETED     5.28  44.80     27.9 |   236.5    76.7    23.2    16.8    23.0 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=96 fesom_groups=2 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccG5      42 COMPLETED     8.93  26.49     38.1 |   422.2   149.6    24.8    20.7    42.4 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=128 fesom_groups=2 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccG4      70 COMPLETED     4.66  50.76     33.1 |   221.6    61.6    21.2    16.1    24.6 | fesom_nproc=1792 fesom_omp=1 fesom_rpn=96 fesom_groups=3 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccG3      70 COMPLETED     3.86  61.28     27.4 |   203.9    55.5    15.5    10.7    23.8 | fesom_nproc=2688 fesom_omp=1 fesom_rpn=96 fesom_groups=2 oifs_nproc=384 oifs_omp=4 xios_rpn=2
+ccP1      36 COMPLETED     5.14  46.02     18.8 |   242.1    93.4    15.9    11.1    23.4 | fesom_nproc=2688 fesom_omp=1 fesom_rpn=96 fesom_groups=1 oifs_nproc=192 oifs_omp=4 xios_rpn=3 (continuation from 2145, OIFS from initial conditions)
